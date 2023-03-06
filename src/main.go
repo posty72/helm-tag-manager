@@ -1,19 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"helm.sh/helm/v3/pkg/chart/loader"
 
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/kube"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -97,6 +98,7 @@ type Message struct {
 	CommitSha     string `json:"commit_sha"`
 	RepoName      string `json:"repo_name"`
 	HelmChartName string `json:"helm_chart_name"`
+	Namespace     string `json:"namespace"`
 }
 
 func handleMessage(msg *sqs.Message) bool {
@@ -109,40 +111,28 @@ func handleMessage(msg *sqs.Message) bool {
 		return true
 	}
 
-	kubeconfigPath := "~/kubeconfig"
-	releaseNamespace := "default"
-	actionConfig := new(action.Configuration)
-	err := actionConfig.Init(kube.GetConfig(kubeconfigPath, "", releaseNamespace), releaseNamespace, os.Getenv("HELM_DRIVER"), func(format string, v ...interface{}) {
-		fmt.Sprintf(format, v)
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
 	fmt.Println(data.HelmChartName)
 	fmt.Println(data.CommitSha)
 	fmt.Println(data.RepoName)
 
-	chartPath := "/tmp/my-chart-0.1.0.tgz"
-	chart, err := loader.Load(chartPath)
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{CurrentContext: ""}).ClientConfig()
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 
-	iCli := action.NewUpgrade(actionConfig)
+	clientSet, err := kubernetes.NewForConfig(config)
 
-	values := map[string]interface{}{
-		"image.tag": data.CommitSha,
-	}
+	patch := []byte(fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "spend-webapp","image":"708991919921.dkr.ecr.ap-southeast-2.amazonaws.com/spend-webapp:%s"}]}}}}]`, data.CommitSha))
 
-	iCli.Namespace = releaseNamespace
-	rel, err := iCli.Run(data.HelmChartName, chart, values)
+	_, err = clientSet.AppsV1().Deployments("spend").Patch(context.Background(), data.HelmChartName, types.JSONPatchType, patch, v1.PatchOptions{})
+
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 
-	fmt.Println("Successfully installed release: ", rel.Name)
+	println("Successfully patched deployment")
 
 	return true
 }

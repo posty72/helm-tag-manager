@@ -10,3 +10,7 @@ output token {
 output sqs_url {
   value = aws_sqs_queue.tagging_queue.url
 }
+
+output ecr_url {
+  value = aws_ecr_repository.helm_tag_manager.repository_url
+}
