@@ -116,3 +116,8 @@ terraform.rc
 
 
 lambda/**/*.zip
+
+# Created by https://www.toptal.com/developers/gitignore/api/vscode
+# Edit at https://www.toptal.com/developers/gitignore?templates=vscode
+
+.vscode/*

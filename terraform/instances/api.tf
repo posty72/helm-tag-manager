@@ -63,10 +63,9 @@ resource "aws_apigatewayv2_integration" "helm_tag_manager" {
   connection_type     = "INTERNET"
 
   request_parameters = {
-    "QueueUrl"               = aws_sqs_queue.tagging_queue.url
-    "MessageBody"            = "$request.body.message",
-    "MessageDeduplicationId" = "test"
-    "MessageGroupId"         = "test"
+    "QueueUrl"       = aws_sqs_queue.tagging_queue.url
+    "MessageBody"    = "$request.body.message"
+    "MessageGroupId" = aws_apigatewayv2_api.helm_tag_manager.id
   }
 }
 
