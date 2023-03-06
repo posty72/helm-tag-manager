@@ -22,6 +22,7 @@ var (
 )
 
 func main() {
+
 	queue := flag.String("q", "helm_tag_manager_queue.fifo", "The name of the queue")
 	timeout := flag.Int64("t", 5, "How long, in seconds, that the message is hidden from others")
 	flag.Parse()
@@ -96,7 +97,7 @@ func pollMessages(queueURL string, chn chan<- *sqs.Message) {
 
 type Message struct {
 	CommitSha     string `json:"commit_sha"`
-	RepoName      string `json:"repo_name"`
+	Repo          string `json:"repo"`
 	HelmChartName string `json:"helm_chart_name"`
 	Namespace     string `json:"namespace"`
 }
@@ -113,7 +114,7 @@ func handleMessage(msg *sqs.Message) bool {
 
 	fmt.Println(data.HelmChartName)
 	fmt.Println(data.CommitSha)
-	fmt.Println(data.RepoName)
+	fmt.Println(data.Repo)
 
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
@@ -124,7 +125,7 @@ func handleMessage(msg *sqs.Message) bool {
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	patch := []byte(fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "spend-webapp","image":"708991919921.dkr.ecr.ap-southeast-2.amazonaws.com/spend-webapp:%s"}]}}}}]`, data.CommitSha))
+	patch := []byte(fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "spend-webapp","image":"%s:%s"}]}}}}]`, data.Repo, data.CommitSha))
 
 	_, err = clientSet.AppsV1().Deployments("spend").Patch(context.Background(), data.HelmChartName, types.JSONPatchType, patch, v1.PatchOptions{})
 
