@@ -129,7 +129,8 @@ func handleMessage(msg *sqs.Message) bool {
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{CurrentContext: ""}).ClientConfig()
 	if err != nil {
-		panic(err.Error())
+		fmt.Println("failed to create config", err)
+		return false
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
@@ -139,7 +140,8 @@ func handleMessage(msg *sqs.Message) bool {
 	_, err = clientSet.AppsV1().Deployments("spend").Patch(context.Background(), data.HelmChartName, types.JSONPatchType, patch, v1.PatchOptions{})
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println("failed to patch deployment", err)
+		return false
 	}
 
 	println("Successfully patched deployment")
@@ -148,6 +150,7 @@ func handleMessage(msg *sqs.Message) bool {
 }
 
 func deleteMessage(queueURL string, msg *sqs.Message) {
+	println("Deleting message")
 	sqsSvc.DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: msg.ReceiptHandle,
