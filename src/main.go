@@ -137,7 +137,7 @@ func handleMessage(msg *sqs.Message) bool {
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	patch := fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}]`, data.ContainerName, data.Repo, data.ImageTag)
+	patch := fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}`, data.ContainerName, data.Repo, data.ImageTag)
 
 	fmt.Println(patch)
 
