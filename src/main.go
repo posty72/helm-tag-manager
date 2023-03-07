@@ -136,9 +136,11 @@ func handleMessage(msg *sqs.Message) bool {
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	patch := []byte(fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "spend-webapp","image":"%s:%s"}]}}}}]`, data.Repo, data.CommitSha))
+	patch := fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}]`, data.HelmChartName, data.Repo, data.CommitSha)
 
-	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.HelmChartName, types.JSONPatchType, patch, v1.PatchOptions{})
+	fmt.Sprintln(patch)
+
+	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.HelmChartName, types.JSONPatchType, []byte(patch), v1.PatchOptions{})
 
 	if err != nil {
 		fmt.Println("failed to patch deployment", err)
