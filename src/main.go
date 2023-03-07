@@ -12,8 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
@@ -134,13 +133,25 @@ func handleMessage(msg *sqs.Message) bool {
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
+	deploymentClient := clientSet.AppsV1().Deployments(data.Namespace)
 
-	patch := fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}`, data.ContainerName, data.Repo, data.ImageTag)
+	result, err := deploymentClient.Get(context.TODO(), data.DeploymentName, metav1.GetOptions{})
+	if err != nil {
+		fmt.Println("could not find deployment", err)
+		return true
+	}
 
-	fmt.Println(patch)
+	containerIndex := 0
+	for i := 0; i < len(result.Spec.Template.Spec.Containers); i++ {
+		if result.Spec.Template.Spec.Containers[i].Name == data.ContainerName {
+			containerIndex = i
+			break
+		}
+	}
 
-	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.DeploymentName, types.JSONPatchType, []byte(patch), v1.PatchOptions{})
+	result.Spec.Template.Spec.Containers[containerIndex].Image = data.Repo + ":" + data.ImageTag
 
+	_, err = deploymentClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 	if err != nil {
 		fmt.Println("failed to patch deployment", err)
 		return true
