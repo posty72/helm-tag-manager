@@ -34,8 +34,10 @@ func main() {
 		return
 	}
 
+	fmt.Printf("Key: %s, Secret: %s", os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
+
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String("us-west-2"),
+		Region:      aws.String("ap-southeast-2"),
 		Credentials: credentials.NewStaticCredentials(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), ""),
 	})
 	if err != nil {
