@@ -142,7 +142,7 @@ func handleMessage(msg *sqs.Message) bool {
 
 	if err != nil {
 		fmt.Println("failed to patch deployment", err)
-		return false
+		return true
 	}
 
 	println("Successfully patched deployment")
@@ -151,7 +151,7 @@ func handleMessage(msg *sqs.Message) bool {
 }
 
 func deleteMessage(queueURL string, msg *sqs.Message) {
-	println("Deleting message")
+	println("DELETING MESSAGE >>>")
 	sqsSvc.DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: msg.ReceiptHandle,
