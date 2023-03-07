@@ -52,4 +52,4 @@ jobs:
           url: "https://jcg7s6payg.execute-api.ap-southeast-2.amazonaws.com/helm_tag_manager/"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json", "Authorization": "Bearer ${{ secrets.TAG_MANAGER_TOKEN }}"}'
-          data: '{"message": {"commit_sha":"{{ env.IMAGE_TAG }}", "repo":"{{ env.REGISTRY }}/{{ env.REPOSITORY }}", "helm_chart_name":"helm-tag-manager-deployment", "namespace":"spend" }}'
+          data: '{"message": {"commit_sha":"$IMAGE_TAG", "repo":"708991919921.dkr.ecr.ap-southeast-2.amazonaws.com/helm-tag-manager", "helm_chart_name":"helm-tag-manager-deployment", "namespace":"spend" }}'
