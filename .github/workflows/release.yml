@@ -45,11 +45,9 @@ jobs:
       - name: Deploy Stage
         uses: fjogeleit/http-request-action@v1
         env:
-          REGISTRY: 708991919921.dkr.ecr.ap-southeast-2.amazonaws.com
-          REPOSITORY: helm-tag-manager
           IMAGE_TAG: ${{ github.sha }}
         with:
           url: "https://jcg7s6payg.execute-api.ap-southeast-2.amazonaws.com/helm_tag_manager/"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json", "Authorization": "Bearer ${{ secrets.TAG_MANAGER_TOKEN }}"}'
-          data: '{"message": {"commit_sha":"$IMAGE_TAG", "repo":"708991919921.dkr.ecr.ap-southeast-2.amazonaws.com/helm-tag-manager", "deployment_name":"helm-tag-manager-deployment", "namespace":"spend", "container_name": "helm-tag-manager" }}'
+          data: '{"message": {"image_tag":"${{ github.sha }}", "repo":"708991919921.dkr.ecr.ap-southeast-2.amazonaws.com/helm-tag-manager", "deployment_name":"helm-tag-manager-deployment", "namespace":"spend", "container_name": "helm-tag-manager" }}'
