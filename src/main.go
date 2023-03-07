@@ -105,10 +105,11 @@ func pollMessages(queueURL string, chn chan<- *sqs.Message) {
 }
 
 type Message struct {
-	CommitSha     string `json:"commit_sha"`
-	Repo          string `json:"repo"`
-	HelmChartName string `json:"helm_chart_name"`
-	Namespace     string `json:"namespace"`
+	ImageTag       string `json:"image_tag"`
+	Repo           string `json:"repo"`
+	DeploymentName string `json:"deployment_name"`
+	ContainerName  string `json:"container_name"`
+	Namespace      string `json:"namespace"`
 }
 
 func handleMessage(msg *sqs.Message) bool {
@@ -121,7 +122,7 @@ func handleMessage(msg *sqs.Message) bool {
 		return true
 	}
 
-	if data.HelmChartName == "" || data.CommitSha == "" || data.Repo == "" || data.Namespace == "" {
+	if data.ContainerName == "" || data.ImageTag == "" || data.Repo == "" || data.Namespace == "" || data.DeploymentName == "" {
 		fmt.Println("missing data")
 		return true
 	}
@@ -136,11 +137,11 @@ func handleMessage(msg *sqs.Message) bool {
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	patch := fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}]`, data.HelmChartName, data.Repo, data.CommitSha)
+	patch := fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}]`, data.ContainerName, data.Repo, data.ImageTag)
 
 	fmt.Println(patch)
 
-	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.HelmChartName, types.JSONPatchType, []byte(patch), v1.PatchOptions{})
+	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.DeploymentName, types.JSONPatchType, []byte(patch), v1.PatchOptions{})
 
 	if err != nil {
 		fmt.Println("failed to patch deployment", err)
