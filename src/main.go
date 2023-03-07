@@ -141,12 +141,16 @@ func handleMessage(msg *sqs.Message) bool {
 		return true
 	}
 
-	containerIndex := 0
+	containerIndex := -1
 	for i := 0; i < len(result.Spec.Template.Spec.Containers); i++ {
 		if result.Spec.Template.Spec.Containers[i].Name == data.ContainerName {
 			containerIndex = i
 			break
 		}
+	}
+	if containerIndex == -1 {
+		fmt.Println("could not find container")
+		return true
 	}
 
 	result.Spec.Template.Spec.Containers[containerIndex].Image = data.Repo + ":" + data.ImageTag
