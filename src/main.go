@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,8 +23,8 @@ var (
 )
 
 func main() {
-
-	queue := flag.String("q", "helm_tag_manager_queue.fifo", "The name of the queue")
+	queueName := os.Getenv("QUEUE_NAME")
+	queue := flag.String("q", queueName, "The name of the queue")
 	timeout := flag.Int64("t", 5, "How long, in seconds, that the message is hidden from others")
 	flag.Parse()
 
