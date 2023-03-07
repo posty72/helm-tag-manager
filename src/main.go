@@ -121,9 +121,10 @@ func handleMessage(msg *sqs.Message) bool {
 		return true
 	}
 
-	fmt.Println(data.HelmChartName)
-	fmt.Println(data.CommitSha)
-	fmt.Println(data.Repo)
+	if data.HelmChartName == "" || data.CommitSha == "" || data.Repo == "" || data.Namespace == "" {
+		fmt.Println("missing data")
+		return true
+	}
 
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
@@ -137,7 +138,7 @@ func handleMessage(msg *sqs.Message) bool {
 
 	patch := []byte(fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "spend-webapp","image":"%s:%s"}]}}}}]`, data.Repo, data.CommitSha))
 
-	_, err = clientSet.AppsV1().Deployments("spend").Patch(context.Background(), data.HelmChartName, types.JSONPatchType, patch, v1.PatchOptions{})
+	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.HelmChartName, types.JSONPatchType, patch, v1.PatchOptions{})
 
 	if err != nil {
 		fmt.Println("failed to patch deployment", err)
