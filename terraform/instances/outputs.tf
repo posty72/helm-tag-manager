@@ -14,3 +14,11 @@ output sqs_url {
 output ecr_url {
   value = aws_ecr_repository.helm_tag_manager.repository_url
 }
+
+output "iam_user_key" {
+  value = aws_iam_access_key.helm_tag_manager.id
+}
+output "iam_user_secret" {
+  value     = aws_iam_access_key.helm_tag_manager.secret
+  sensitive = true
+}
