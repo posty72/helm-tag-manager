@@ -138,7 +138,7 @@ func handleMessage(msg *sqs.Message) bool {
 
 	patch := fmt.Sprintf(`[{"spec":{"template":{"spec":{"containers":[{"name": "%s","image":"%s:%s"}]}}}}]`, data.HelmChartName, data.Repo, data.CommitSha)
 
-	fmt.Sprintln(patch)
+	fmt.Println(patch)
 
 	_, err = clientSet.AppsV1().Deployments(data.Namespace).Patch(context.Background(), data.HelmChartName, types.JSONPatchType, []byte(patch), v1.PatchOptions{})
 
