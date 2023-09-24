@@ -86,7 +86,7 @@ func pollMessages(queueURL string, chn chan<- *sqs.Message) {
 		output, err := sqsSvc.ReceiveMessage(&sqs.ReceiveMessageInput{
 			QueueUrl:            aws.String(queueURL),
 			MaxNumberOfMessages: aws.Int64(2),
-			WaitTimeSeconds:     aws.Int64(15),
+			WaitTimeSeconds:     aws.Int64(25),
 		})
 
 		if err != nil {
